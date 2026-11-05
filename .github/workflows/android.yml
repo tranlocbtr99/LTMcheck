@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   build:
+    if: "!contains(github.event.head_commit.message, '[release]')"
     name: Build APK
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +43,7 @@ jobs:
 
   release:
     name: Build signed release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +70,19 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
+      - name: Read app version
+        id: version
+        run: echo "tag=v$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)" >> "$GITHUB_OUTPUT"
+
       - name: Attach APK to release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: LTMcheck ${{ steps.version.outputs.tag }} — Liquid Glass UI
+          body: |
+            Cải thiện giao diện sáng/tối, bề mặt nội dung, thanh điều hướng nổi và nút hỗ trợ chữ lớn.
+            APK release ký bằng khóa hiện có. Giữ nguyên applicationId và logic OCR/AI/lưu trữ.
+            Build CI thành công; chưa kiểm thử trên thiết bị thật. Đây là đợt cải thiện UI nền tảng.
+          fail_on_unmatched_files: true
           files: app/build/outputs/apk/release/*.apk
