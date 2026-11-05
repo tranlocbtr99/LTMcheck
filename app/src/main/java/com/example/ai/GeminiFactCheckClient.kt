@@ -358,12 +358,10 @@ QUY TẮC:
 ĐỊNH DẠNG ĐẦU RA: chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ, không markdown:
 {
   "verdict": "DUNG" | "SAI" | "CHUA_DU_BANG_CHUNG",
-  "confidence": 0.0-1.0,
   "summary": "kết luận ngắn 1 câu tiếng Việt",
-  "explanation": "giải thích 2-4 câu tiếng Việt",
-  "sources": [{"title": "...", "url": "https://..."}]
+  "explanation": "giải thích 2-4 câu tiếng Việt vì sao đúng/sai"
 }
-Tất cả nội dung bằng tiếng Việt.
+Tất cả nội dung bằng tiếng Việt. Không cần gửi nguồn.
 """
 
 
