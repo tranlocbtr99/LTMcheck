@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.CyanNeon
+import com.example.ui.theme.DesignTokens
 import com.example.ui.theme.GlassBorderHighlight
 import com.example.ui.theme.GlassSurfaceElevated
 import com.example.ui.theme.TextPrimary
@@ -35,7 +36,7 @@ fun LiquidGlassButton(
         onClick = onClick,
         modifier = modifier.height(50.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(DesignTokens.RadiusMedium),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.ui.theme.DesignTokens
 import com.example.ui.theme.GlassBorder
 import com.example.ui.theme.GlassBorderHighlight
 import com.example.ui.theme.GlassSurface
@@ -32,7 +33,7 @@ import com.example.ui.theme.GlassSurface
 @Composable
 fun LiquidGlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(24.dp),
+    shape: Shape = RoundedCornerShape(DesignTokens.RadiusLarge),
     borderColor: Color = GlassBorder,
     borderWidth: Dp = 1.dp,
     backgroundColor: Color = GlassSurface,
@@ -74,7 +75,7 @@ fun LiquidGlassCard(
                 shape = shape
             )
             .then(clickableModifier)
-            .padding(16.dp),
+            .padding(DesignTokens.SpaceStandard),
         content = content
     )
 }
