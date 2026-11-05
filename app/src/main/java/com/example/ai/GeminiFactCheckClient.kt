@@ -70,7 +70,7 @@ class GeminiFactCheckClient(
 
     /** Kiểm tra key có hợp lệ không (gọi endpoint nhẹ, không tiêu quota đáng kể). */
     suspend fun validateKey(apiKey: String): Int = withContext(Dispatchers.IO) {
-        val url = "$BASE_URL/models?key=${apiKey.trim()}"
+        val url = "$BASE_URL?key=${apiKey.trim()}"
         val request = Request.Builder().url(url).get().build()
         httpClient.newCall(request).await().use { response ->
             if (response.isSuccessful) {
