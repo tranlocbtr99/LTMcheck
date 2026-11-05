@@ -5,6 +5,7 @@ import com.example.model.FactCheckRecord
 import com.example.model.FactCheckVerdict
 import com.example.model.ReferenceSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Call
@@ -131,13 +132,34 @@ class GeminiFactCheckClient(
             .post(body.toString().toRequestBody(jsonMedia))
             .build()
 
-        httpClient.newCall(request).await().use { response ->
-            val raw = response.body?.string().orEmpty()
-            if (!response.isSuccessful) {
-                throw GeminiException(humanError(response.code, raw), response.code)
+        // Thử lại tối đa 3 lần với backoff để tránh quá tải (429/5xx).
+        var attempt = 0
+        while (true) {
+            try {
+                httpClient.newCall(request).await().use { response ->
+                    val raw = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        val code = response.code
+                        if (code in RETRYABLE_CODES && attempt < 2) {
+                            attempt++
+                            throw GeminiException(humanError(code, raw), code)
+                        }
+                        throw GeminiException(humanError(code, raw), code)
+                    }
+                    return@withContext parseGenerateResponse(raw)
+                }
+            } catch (e: GeminiException) {
+                if (e.httpCode in RETRYABLE_CODES && attempt <= 2) {
+                    val delayMs = (500L * (1 shl attempt)).coerceAtMost(4000L)
+                    delay(delayMs)
+                    attempt++
+                } else {
+                    throw e
+                }
             }
-            parseGenerateResponse(raw)
         }
+        @Suppress("UNREACHABLE_CODE")
+        throw GeminiException("Không gọi được Gemini.")
     }
 
     private fun parseGenerateResponse(raw: String): Pair<String, List<ReferenceSource>> {
@@ -345,6 +367,8 @@ class GeminiFactCheckClient(
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
         private const val MAX_CLAIM_CHARS = 6000
+
+        private val RETRYABLE_CODES = setOf(429, 500, 502, 503, 504)
 
         private const val SYSTEM_PROMPT = """
 Bạn là trợ lý kiểm chứng thông tin tiếng Việt.

@@ -149,9 +149,6 @@ class FloatingAssistantService : Service() {
                     FactCheckServiceManager.updateLiveAudio(transcribedText)
                     if (isFinal) {
                         FactCheckServiceManager.appendVideoTranscript("[Âm thanh video] $transcribedText")
-                        if (transcribedText.length >= 8) {
-                            processSpokenText(transcribedText)
-                        }
                     }
                 }
             },
@@ -504,6 +501,11 @@ class FloatingAssistantService : Service() {
             toggleAudioListening()
         }
 
+        addPanelItem(panel, "📝 Phân tích lời nói đã nghe (gửi AI)", density) {
+            toggleQuickPanel()
+            analyzeSpokenText()
+        }
+
         addPanelItem(panel, "📋 Xem kết quả gần nhất tại đây", density) {
             toggleQuickPanel()
             val record = FactCheckServiceManager.assistantState.value.latestRecord
@@ -553,32 +555,42 @@ class FloatingAssistantService : Service() {
     }
 
     private fun processSpokenText(spokenText: String) {
+        if (spokenText.isBlank()) return
         serviceScope.launch {
-            val claims = claimExtractor.extractClaims(spokenText)
-            if (claims.isNotEmpty()) {
-                val topClaim = claims.first()
-                if (topClaim.normalizedClaim != lastAnalyzedClaim) {
-                    lastAnalyzedClaim = topClaim.normalizedClaim
-                    lastAnalysisTimestamp = System.currentTimeMillis()
+            val dedupKey = spokenText.trim().take(200)
+            if (dedupKey == lastAnalyzedClaim && System.currentTimeMillis() - lastAnalysisTimestamp < 8000L) return@launch
+            lastAnalyzedClaim = dedupKey
+            lastAnalysisTimestamp = System.currentTimeMillis()
 
-                    val record = coordinator.verify(
-                        claim = topClaim.normalizedClaim,
-                        sourceApp = "Âm thanh video (${topClaim.detectedAppName})",
-                        rawScreenText = "Nhận diện từ lời nói video: \"$spokenText\""
-                    )
+            val record = coordinator.verify(
+                claim = spokenText.trim().take(MAX_CLAIM_FOR_ANALYSIS),
+                sourceApp = "Âm thanh video",
+                rawScreenText = "Nhận diện từ lời nói video: \"$spokenText\""
+            )
 
-                    repository.saveRecord(record)
-                    FactCheckServiceManager.onNewFactCheckRecord(record)
-                    updateBubbleUi()
+            repository.saveRecord(record)
+            FactCheckServiceManager.onNewFactCheckRecord(record)
+            updateBubbleUi()
 
-                    // Hiển thị trực tiếp kết quả nếu phát hiện sai lệch hoặc có yêu cầu
-                    showOnScreenResultCard(record)
-                    if (record.isAlerted) {
-                        triggerAlertNotification(record)
-                    }
-                }
+            showOnScreenResultCard(record)
+            Toast.makeText(
+                this@FloatingAssistantService,
+                "${record.verdict.titleVi}: ${record.shortExplanation}",
+                Toast.LENGTH_LONG
+            ).show()
+            if (record.isAlerted) {
+                triggerAlertNotification(record)
             }
         }
+    }
+
+    private fun analyzeSpokenText() {
+        val text = FactCheckServiceManager.assistantState.value.liveTranscribedAudio
+        if (text.isBlank()) {
+            Toast.makeText(this, "Chưa có lời nói nào được nhận diện. Hãy bật STT và chờ.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        processSpokenText(text)
     }
 
     private fun setupOnScreenResultCard(root: FrameLayout, density: Float, screenWidth: Int) {
