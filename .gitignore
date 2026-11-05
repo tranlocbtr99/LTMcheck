@@ -16,3 +16,9 @@
 local.properties
 .env
 debug.keystore
+
+# Signing material — never commit
+*.jks
+*.keystore
+my-upload-key.jks
+!debug.keystore

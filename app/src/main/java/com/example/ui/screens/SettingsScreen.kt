@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Security
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -39,6 +42,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +63,7 @@ import com.example.ui.components.LiquidGlassCard
 import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.GlassBackground
 import com.example.ui.theme.GlassBorder
+import com.example.ui.theme.GlassSurface
 import com.example.ui.theme.GlassSurfaceElevated
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
@@ -98,6 +106,106 @@ fun SettingsScreen(
             contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 0. Cấu hình AI Gemini (API key do người dùng nhập, không nhúng vào APK)
+            item {
+                val keyConfigured by viewModel.aiKeyConfigured.collectAsStateWithLifecycle()
+                val savedModel by viewModel.aiModel.collectAsStateWithLifecycle()
+                val statusMessage by viewModel.aiStatusMessage.collectAsStateWithLifecycle()
+                val testInProgress by viewModel.aiTestInProgress.collectAsStateWithLifecycle()
+
+                var keyInput by remember { mutableStateOf("") }
+                var modelInput by remember { mutableStateOf(savedModel) }
+
+                LiquidGlassCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Key, contentDescription = null, tint = CyanNeon, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("CẤU HÌNH AI GEMINI", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        Text(
+                            text = if (keyConfigured) {
+                                "Đã có API key trên thiết bị. Key chỉ lưu trong bộ nhớ riêng của ứng dụng, không nằm trong APK."
+                            } else {
+                                "Chưa có API key. Ứng dụng đang dùng dữ liệu mẫu cục bộ. Nhập key từ Google AI Studio để bật kiểm chứng bằng AI thật."
+                            },
+                            color = if (keyConfigured) VerdictTrueColor else TextMuted,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp
+                        )
+
+                        OutlinedTextField(
+                            value = keyInput,
+                            onValueChange = { keyInput = it },
+                            placeholder = { Text("Dán API key (AIza…)", color = TextMuted, fontSize = 13.sp) },
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyanNeon,
+                                unfocusedBorderColor = GlassBorder,
+                                focusedContainerColor = GlassSurfaceElevated,
+                                unfocusedContainerColor = GlassSurface
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = modelInput,
+                            onValueChange = { modelInput = it },
+                            label = { Text("Model", color = TextMuted, fontSize = 11.sp) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyanNeon,
+                                unfocusedBorderColor = GlassBorder,
+                                focusedContainerColor = GlassSurfaceElevated,
+                                unfocusedContainerColor = GlassSurface
+                            )
+                        )
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            LiquidGlassButton(
+                                onClick = { viewModel.saveAiConfig(keyInput, modelInput) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Lưu cấu hình", fontSize = 12.sp)
+                            }
+                            LiquidGlassButton(
+                                onClick = { viewModel.testAiConnection(keyInput, modelInput) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(if (testInProgress) "Đang kiểm tra…" else "Kiểm tra kết nối", fontSize = 12.sp)
+                            }
+                        }
+
+                        statusMessage?.let { message ->
+                            Text(
+                                text = message,
+                                color = if (message.startsWith("Kết nối thành công") || message.startsWith("Đã lưu")) {
+                                    VerdictTrueColor
+                                } else if (message.startsWith("Kết nối thất bại") || message.startsWith("Đang lưu")) {
+                                    VerdictFalseColor
+                                } else {
+                                    TextSecondary
+                                },
+                                fontSize = 11.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
+
+                        Text(
+                            text = "Gợi ý model: gemini-2.5-flash (nhanh, miễn phí trong hạn mức) hoặc gemini-2.5-pro (chính xác hơn, chậm hơn).",
+                            color = TextMuted,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+
             // 1. Quyền hệ thống (System Permissions)
             item {
                 LiquidGlassCard(modifier = Modifier.fillMaxWidth()) {

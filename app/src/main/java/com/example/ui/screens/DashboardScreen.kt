@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -105,6 +106,8 @@ fun DashboardScreen(
     val context = LocalContext.current
     val assistantState by viewModel.assistantState.collectAsStateWithLifecycle()
     val allHistory by viewModel.allHistory.collectAsStateWithLifecycle()
+    val isVerifying by viewModel.isVerifying.collectAsStateWithLifecycle()
+    val aiStatusMessage by viewModel.aiStatusMessage.collectAsStateWithLifecycle()
     var manualInputText by remember { mutableStateOf("") }
 
     val trendingTestClaims = listOf(
@@ -840,6 +843,24 @@ fun DashboardScreen(
                             }
                         }
                     )
+
+                    // Trạng thái kiểm chứng bằng AI
+                    if (isVerifying) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = CyanNeon
+                            )
+                            Text("AI đang kiểm chứng nội dung…", color = TextSecondary, fontSize = 12.sp)
+                        }
+                    }
+                    aiStatusMessage?.let { message ->
+                        Text(text = message, color = TextMuted, fontSize = 11.sp, lineHeight = 15.sp)
+                    }
 
                     // Gợi ý chủ đề tin đồn thịnh hành
                     Text(text = "Tin đồn thường gặp để thử nghiệm:", color = TextSecondary, fontSize = 12.sp)

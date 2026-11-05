@@ -46,6 +46,7 @@ import com.example.data.repository.FactCheckRepository
 import com.example.engine.AudioSpeechEngine
 import com.example.engine.ClaimExtractor
 import com.example.engine.FactCheckEngine
+import com.example.ai.FactCheckCoordinator
 import com.example.engine.FactCheckServiceManager
 import com.example.engine.OcrProcessor
 import com.example.engine.ScreenFrameDetector
@@ -104,6 +105,7 @@ class FloatingAssistantService : Service() {
     private val ocrProcessor = OcrProcessor()
     private val claimExtractor = ClaimExtractor()
     private val factCheckEngine = FactCheckEngine()
+    private val coordinator by lazy { FactCheckCoordinator.getInstance(this) }
     private lateinit var repository: FactCheckRepository
 
     // Touch & Drag state for bubble
@@ -559,8 +561,8 @@ class FloatingAssistantService : Service() {
                     lastAnalyzedClaim = topClaim.normalizedClaim
                     lastAnalysisTimestamp = System.currentTimeMillis()
 
-                    val record = factCheckEngine.verifyClaim(
-                        extractedClaim = topClaim.normalizedClaim,
+                    val record = coordinator.verify(
+                        claim = topClaim.normalizedClaim,
                         sourceApp = "Âm thanh video (${topClaim.detectedAppName})",
                         rawScreenText = "Nhận diện từ lời nói video: \"$spokenText\""
                     )
@@ -1218,6 +1220,12 @@ class FloatingAssistantService : Service() {
             }
 
             val ocrText = ocrProcessor.recognizeText(bitmapCopy)
+            val screenshotBytes = runCatching {
+                java.io.ByteArrayOutputStream().use { out ->
+                    bitmapCopy.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                    out.toByteArray()
+                }
+            }.getOrNull()
             bitmapCopy.recycle()
 
             if (ocrText.isBlank()) {
@@ -1271,10 +1279,12 @@ class FloatingAssistantService : Service() {
                 FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.RETRIEVING_EVIDENCE)
             }
 
-            val record = factCheckEngine.verifyClaim(
-                extractedClaim = topClaim,
+            val record = coordinator.verify(
+                claim = topClaim,
                 sourceApp = detectedApp,
-                rawScreenText = ocrText
+                rawScreenText = ocrText,
+                imageBytes = screenshotBytes,
+                imageMime = "image/jpeg"
             )
 
             repository.saveRecord(record)
@@ -1418,8 +1428,8 @@ class FloatingAssistantService : Service() {
                     FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.RETRIEVING_EVIDENCE)
                 }
 
-                val record = factCheckEngine.verifyClaim(
-                    extractedClaim = topClaim,
+                val record = coordinator.verify(
+                    claim = topClaim,
                     sourceApp = targetApp,
                     rawScreenText = combinedContent
                 )

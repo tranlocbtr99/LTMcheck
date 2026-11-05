@@ -5,6 +5,8 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.FactCheckApplication
+import com.example.ai.AiSettingsStore
+import com.example.ai.FactCheckCoordinator
 import com.example.data.repository.FactCheckRepository
 import com.example.engine.FactCheckEngine
 import com.example.engine.FactCheckServiceManager
@@ -26,6 +28,28 @@ class FactCheckViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val repository = (application as FactCheckApplication).repository
     private val engine = FactCheckEngine()
+    private val coordinator = FactCheckCoordinator.getInstance(application)
+
+    /** Cấu hình AI (key nhập trong Cài đặt, không nhúng vào APK). */
+    val aiKeyConfigured: StateFlow<Boolean> = coordinator.hasApiKey.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+    val aiModel: StateFlow<String> = coordinator.modelFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AiSettingsStore.DEFAULT_MODEL
+    )
+
+    private val _isVerifying = MutableStateFlow(false)
+    val isVerifying: StateFlow<Boolean> = _isVerifying.asStateFlow()
+
+    private val _aiStatusMessage = MutableStateFlow<String?>(null)
+    val aiStatusMessage: StateFlow<String?> = _aiStatusMessage.asStateFlow()
+
+    private val _aiTestInProgress = MutableStateFlow(false)
+    val aiTestInProgress: StateFlow<Boolean> = _aiTestInProgress.asStateFlow()
 
     val assistantState: StateFlow<AssistantState> = FactCheckServiceManager.assistantState
     val settings: StateFlow<MonitoringSettings> = FactCheckServiceManager.settings
@@ -104,13 +128,59 @@ class FactCheckViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun verifyManualClaim(claimText: String, sourceApp: String = "Nhập thủ công") {
-        if (claimText.isBlank()) return
+        if (claimText.isBlank() || _isVerifying.value) return
         viewModelScope.launch {
-            val record = engine.verifyClaim(claimText, sourceApp)
-            repository.saveRecord(record)
-            FactCheckServiceManager.onNewFactCheckRecord(record)
-            _selectedDetailRecord.value = record
+            _isVerifying.value = true
+            _aiStatusMessage.value = null
+            try {
+                val record = coordinator.verify(
+                    claim = claimText,
+                    sourceApp = sourceApp
+                )
+                repository.saveRecord(record)
+                FactCheckServiceManager.onNewFactCheckRecord(record)
+                _selectedDetailRecord.value = record
+                if (!aiKeyConfigured.value) {
+                    _aiStatusMessage.value = "Chưa có API key: kết quả đang dùng dữ liệu mẫu cục bộ. Vào Cài đặt để bật AI thật."
+                }
+            } catch (e: Exception) {
+                _aiStatusMessage.value = e.message ?: "Không kiểm chứng được nội dung này."
+            } finally {
+                _isVerifying.value = false
+            }
         }
+    }
+
+    /** Lưu API key + model người dùng nhập trong Cài đặt. */
+    fun saveAiConfig(apiKey: String, model: String) {
+        viewModelScope.launch {
+            _aiStatusMessage.value = "Đang lưu cấu hình…"
+            coordinator.saveConfig(apiKey, model)
+            _aiStatusMessage.value = if (apiKey.isBlank()) {
+                "Đã xoá API key. Ứng dụng sẽ dùng dữ liệu mẫu cục bộ."
+            } else {
+                "Đã lưu cấu hình AI. Nhấn \"Kiểm tra kết nối\" để xác nhận key hoạt động."
+            }
+        }
+    }
+
+    /** Gọi thử Gemini để xác nhận key/model hợp lệ. */
+    fun testAiConnection(apiKey: String, model: String) {
+        if (_aiTestInProgress.value) return
+        viewModelScope.launch {
+            _aiTestInProgress.value = true
+            _aiStatusMessage.value = null
+            val result = coordinator.testConnection(apiKey, model)
+            _aiTestInProgress.value = false
+            _aiStatusMessage.value = result.fold(
+                onSuccess = { count -> "Kết nối thành công. Key hợp lệ, truy cập được $count model Gemini." },
+                onFailure = { e -> "Kết nối thất bại: ${e.message}" }
+            )
+        }
+    }
+
+    fun clearAiStatus() {
+        _aiStatusMessage.value = null
     }
 
     fun askAiAboutScreen(question: String) {
@@ -125,7 +195,15 @@ class FactCheckViewModel(application: Application) : AndroidViewModel(applicatio
             FactCheckServiceManager.addChatMessage(userMsg)
 
             // Fact-checking / AI answer synthesis with source grounding
-            val aiResponse = generateGroundedAiAnswer(question, screenContext)
+            val aiResponse = coordinator.chat(question, screenContext).getOrNull()
+                ?.let { answer ->
+                    ChatMessage(
+                        isUser = false,
+                        text = answer,
+                        onScreenContext = screenContext.takeIf { it.isNotBlank() },
+                        relatedSources = assistantState.value.latestRecord?.references ?: emptyList()
+                    )
+                } ?: generateGroundedAiAnswer(question, screenContext)
             FactCheckServiceManager.addChatMessage(aiResponse)
         }
     }
