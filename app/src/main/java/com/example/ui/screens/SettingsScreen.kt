@@ -197,7 +197,7 @@ fun SettingsScreen(
                         }
 
                         Text(
-                            text = "Gợi ý model: gemini-2.5-flash (nhanh, miễn phí trong hạn mức) hoặc gemini-2.5-pro (chính xác hơn, chậm hơn).",
+                            text = "Gợi ý model: gemini-3.5-flash-lite (nhanh, rẻ, phù hợp quét màn hình liên tục) hoặc gemini-3.8-flash (phân tích sâu hơn, chậm hơn). Dòng 2.5 đã bị Google ngừng hỗ trợ.",
                             color = TextMuted,
                             fontSize = 11.sp,
                             lineHeight = 15.sp

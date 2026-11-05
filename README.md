@@ -23,7 +23,7 @@ Trợ lý kiểm chứng thông tin (fact-check) chạy trên Android: nhập v�
 
 1. Tải APK ở mục **Releases** và cài đặt (cho phép "Cài từ nguồn không xác định").
 2. Mở app → tab **Cài đặt** → mục **CẤU HÌNH AI GEMINI**.
-3. Dán API key, giữ model `gemini-2.5-flash` (hoặc đổi sang `gemini-2.5-pro`), nhấn **Lưu cấu hình**.
+3. Dán API key, giữ model `gemini-3.5-flash-lite` (mặc định, nhanh và rẻ) hoặc đổi sang `gemini-3.8-flash` (phân tích sâu hơn), nhấn **Lưu cấu hình**.
 4. Nhấn **Kiểm tra kết nối** để xác nhận key hợp lệ.
 
 API key chỉ được lưu trong bộ nhớ riêng của ứng dụng trên thiết bị (`DataStore`), **không nhúng vào APK**, không gửi đi đâu ngoài Google Gemini API.

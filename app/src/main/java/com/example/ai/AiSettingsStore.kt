@@ -52,11 +52,15 @@ class AiSettingsStore private constructor(context: Context) {
     }
 
     companion object {
-        const val DEFAULT_MODEL = "gemini-2.5-flash"
+        /** Model mặc định: nhanh, rẻ, phù hợp quét màn hình liên tục. */
+        const val DEFAULT_MODEL = "gemini-3.5-flash-lite"
+
+        /** Các model đang được Gemini API khuyến nghị (2.5 series đã deprecated). */
         val SUGGESTED_MODELS = listOf(
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-lite",
-            "gemini-2.5-pro"
+            "gemini-3.5-flash-lite",
+            "gemini-3.8-flash",
+            "gemini-3.6-flash",
+            "gemini-3.1-flash-lite"
         )
 
         private val KEY_API_KEY = stringPreferencesKey("gemini_api_key")
