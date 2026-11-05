@@ -3,49 +3,49 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// Liquid Glass Core Palette
-val GlassBackground = Color(0xFF090D1A)
-val GlassSurface = Color(0x331E293B)
-val GlassSurfaceElevated = Color(0x4D1E293B)
-val GlassBorder = Color(0x3338BDF8)
-val GlassBorderHighlight = Color(0x6638BDF8)
+// iOS-style Liquid Glass Core Palette (dark mode)
+val GlassBackground = Color(0xFF000000)
+val GlassSurface = Color(0x1FFFFFFF)
+val GlassSurfaceElevated = Color(0x29FFFFFF)
+val GlassBorder = Color(0x33FFFFFF)
+val GlassBorderHighlight = Color(0x66FFFFFF)
 
-// Neon & Brand Accents
-val CyanNeon = Color(0xFF38BDF8)
-val BlueNeon = Color(0xFF0EA5E9)
-val PurpleNeon = Color(0xFFA855F7)
+// iOS System Accents
+val CyanNeon = Color(0xFF0A84FF)
+val BlueNeon = Color(0xFF5AC8FA)
+val PurpleNeon = Color(0xFFBF5AF2)
 
-// Text Colors
-val TextPrimary = Color(0xFFF8FAFC)
-val TextSecondary = Color(0xFF94A3B8)
-val TextMuted = Color(0xFF64748B)
+// Text Colors (iOS labels)
+val TextPrimary = Color(0xFFFFFFFF)
+val TextSecondary = Color(0x99EBEBF5)
+val TextMuted = Color(0x66EBEBF5)
 
-// Verdict Accents
-val VerdictTrueColor = Color(0xFF10B981)
-val VerdictFalseColor = Color(0xFFEF4444)
-val VerdictPartialColor = Color(0xFFF59E0B)
-val VerdictMisleadingColor = Color(0xFFF97316)
-val VerdictInsufficientColor = Color(0xFFA855F7)
-val VerdictUnverifiableColor = Color(0xFF94A3B8)
+// Verdict Accents (iOS system colors)
+val VerdictTrueColor = Color(0xFF30D158)
+val VerdictFalseColor = Color(0xFFFF453A)
+val VerdictPartialColor = Color(0xFFFF9F0A)
+val VerdictMisleadingColor = Color(0xFFFF9F0A)
+val VerdictInsufficientColor = Color(0xFFBF5AF2)
+val VerdictUnverifiableColor = Color(0x99EBEBF5)
 
 // Liquid Glass Gradients
 val LiquidGlassGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0x3D1E293B),
-        Color(0x1F0F172A)
+        Color(0x26FFFFFF),
+        Color(0x0DFFFFFF)
     )
 )
 
 val LiquidGlowGradient = Brush.radialGradient(
     colors = listOf(
-        Color(0x3338BDF8),
-        Color(0x000F172A)
+        Color(0x330A84FF),
+        Color(0x00000000)
     )
 )
 
 val HeroHeaderGradient = Brush.horizontalGradient(
     colors = listOf(
-        Color(0xFF38BDF8),
-        Color(0xFF818CF8)
+        Color(0xFF0A84FF),
+        Color(0xFF5AC8FA)
     )
 )

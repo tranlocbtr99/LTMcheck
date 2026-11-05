@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -31,7 +32,7 @@ import com.example.ui.theme.GlassSurface
 @Composable
 fun LiquidGlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(20.dp),
+    shape: Shape = RoundedCornerShape(24.dp),
     borderColor: Color = GlassBorder,
     borderWidth: Dp = 1.dp,
     backgroundColor: Color = GlassSurface,
@@ -50,22 +51,23 @@ fun LiquidGlassCard(
 
     Box(
         modifier = modifier
+            .shadow(8.dp, shape, ambientColor = Color(0x33000000), spotColor = Color(0x33000000))
             .clip(shape)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        backgroundColor.copy(alpha = 0.55f),
-                        backgroundColor.copy(alpha = 0.30f)
+                        backgroundColor.copy(alpha = 0.45f),
+                        backgroundColor.copy(alpha = 0.18f)
                     )
                 )
             )
             .border(
                 BorderStroke(
-                    borderWidth,
+                    0.5.dp,
                     Brush.verticalGradient(
                         colors = listOf(
-                            borderColor.copy(alpha = 0.8f),
-                            borderColor.copy(alpha = 0.2f)
+                            Color(0x66FFFFFF),
+                            Color(0x1AFFFFFF)
                         )
                     )
                 ),
