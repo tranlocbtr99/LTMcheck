@@ -1249,25 +1249,25 @@ class FloatingAssistantService : Service() {
             }
 
 
-            val claims = claimExtractor.extractClaims(ocrText)
-            val topClaim = claims.firstOrNull()?.normalizedClaim 
-                ?: ocrText.lines().firstOrNull { it.trim().length >= 12 }?.trim()
+            // Gửi thẳng nội dung đọc được từ màn hình cho Gemini (không trích xuất claim).
+            val topClaim = ocrText.trim().take(MAX_CLAIM_FOR_ANALYSIS)
 
-            if (topClaim == null || topClaim.length < 8) {
+            if (topClaim.length < 8) {
                 withContext(Dispatchers.Main) {
                     FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.IDLE)
                 }
                 return
             }
 
-            if (topClaim == lastAnalyzedClaim && System.currentTimeMillis() - lastAnalysisTimestamp < 8000L) {
+            val dedupKey = topClaim.take(200)
+            if (dedupKey == lastAnalyzedClaim && System.currentTimeMillis() - lastAnalysisTimestamp < 8000L) {
                 withContext(Dispatchers.Main) {
                     FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.IDLE)
                 }
                 return
             }
 
-            lastAnalyzedClaim = topClaim
+            lastAnalyzedClaim = dedupKey
             lastAnalysisTimestamp = System.currentTimeMillis()
 
             withContext(Dispatchers.Main) {
@@ -1282,9 +1282,7 @@ class FloatingAssistantService : Service() {
             val record = coordinator.verify(
                 claim = topClaim,
                 sourceApp = detectedApp,
-                rawScreenText = ocrText,
-                imageBytes = screenshotBytes,
-                imageMime = "image/jpeg"
+                rawScreenText = ocrText
             )
 
             repository.saveRecord(record)
@@ -1414,10 +1412,7 @@ class FloatingAssistantService : Service() {
                 withContext(Dispatchers.Main) {
                     FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.EXTRACTING_CLAIMS)
                 }
-                val claims = claimExtractor.extractClaims(combinedContent)
-                val topClaim = claims.firstOrNull()?.normalizedClaim 
-                    ?: combinedContent.lines().firstOrNull { it.trim().length >= 10 }?.trim() 
-                    ?: combinedContent.take(120).trim()
+                val topClaim = combinedContent.trim().take(MAX_CLAIM_FOR_ANALYSIS)
 
                 withContext(Dispatchers.Main) {
                     FactCheckServiceManager.updateScreenContent(
@@ -1626,5 +1621,7 @@ class FloatingAssistantService : Service() {
         const val EXTRA_RESULT_DATA = "extra_result_data"
         const val EXTRA_TRIGGER_INSTANT_CHECK = "extra_trigger_instant_check"
         const val EXTRA_SIMULATED_SPEECH_TEXT = "extra_simulated_speech_text"
+
+        const val MAX_CLAIM_FOR_ANALYSIS = 6000
     }
 }

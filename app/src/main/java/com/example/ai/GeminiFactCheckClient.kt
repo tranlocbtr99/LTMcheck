@@ -54,18 +54,9 @@ class GeminiFactCheckClient(
             throw GeminiException("Nội dung cần kiểm chứng đang trống.")
         }
 
-        val requestBody = buildRequestJson(trimmedClaim, imageBase64, imageMime)
-        val (text, groundingSources) = try {
-            callGenerate(apiKey, model, requestBody, useTools = true)
-        } catch (e: GeminiException) {
-            // Một số model không hỗ trợ tools + JSON cùng lúc: thử lại không tools.
-            if (e.httpCode == 400) {
-                val fallbackBody = buildRequestJson(trimmedClaim, imageBase64, imageMime, jsonMime = true)
-                callGenerate(apiKey, model, fallbackBody, useTools = false)
-            } else {
-                throw e
-            }
-        }
+        // Gửi thẳng nội dung đọc từ màn hình cho Gemini, không dùng search/grounding.
+        val requestBody = buildRequestJson(trimmedClaim, imageBase64, imageMime, jsonMime = true)
+        val (text, groundingSources) = callGenerate(apiKey, model, requestBody, useTools = false)
 
         val parsed = parseModelJson(text)
         return toRecord(
@@ -227,11 +218,8 @@ class GeminiFactCheckClient(
             put("generationConfig", JSONObject().apply {
                 put("temperature", 0.2)
                 put("maxOutputTokens", 2048)
-                if (jsonMime) put("responseMimeType", "application/json")
+                put("responseMimeType", "application/json")
             })
-            if (!jsonMime) {
-                put("tools", JSONArray().put(JSONObject().put("google_search", JSONObject())))
-            }
         }
     }
 
@@ -359,31 +347,25 @@ class GeminiFactCheckClient(
         private const val MAX_CLAIM_CHARS = 6000
 
         private const val SYSTEM_PROMPT = """
-Bạn là chuyên gia kiểm chứng thông tin (fact-checker) người Việt, làm việc theo chuẩn IFCN.
-Nhiệm vụ: đánh giá một tuyên bố/tin nhắn/bài viết do người dùng gửi, có thể kèm ảnh chụp màn hình.
+Bạn là trợ lý kiểm chứng thông tin tiếng Việt.
+Nhiệm vụ: người dùng gửi nội dung đọc được từ màn hình (văn bản). Hãy trả lời: thông tin này ĐÚNG hay SAI, kèm giải thích ngắn gọn và các nguồn liên quan (link) nếu biết.
 
-QUY TẮC BẮT BUỘC:
-1. Chỉ kết luận dựa trên bằng chứng kiểm chứng được. Nếu thiếu dữ liệu, chọn CHUA_DU_BANG_CHUNG, tuyệt đối không bịa.
-2. Trung lập về chính trị, tôn giáo, cá nhân. Không suy diễn động cơ.
-3. Ưu tiên nguồn sơ cấp: cơ quan nhà nước, WHO, báo cáo khoa học, tổ chức fact-check uy tín.
-4. Nêu rõ dấu hiệu đáng ngờ (giật tít, khẩn cấp, lãi suất phi thực tế, yêu cầu chuyển tiền, link lạ...).
-5. Không hướng dẫn hành vi nguy hiểm, không đưa lời khuyên y tế/pháp lý thay chuyên gia.
+QUY TẮC:
+- Chỉ kết luận dựa trên kiến thức của bạn. Nếu không đủ dữ liệu, chọn CHUA_DU_BANG_CHUNG.
+- Trung lập, không suy diễn.
+- Không bịa link: chỉ đưa URL bạn thực sự biết; nếu không chắc, để "sources": [].
 
-ĐỊNH DẠNG ĐẦU RA: chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ, không markdown, không giải thích ngoài JSON:
+ĐỊNH DẠNG ĐẦU RA: chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ, không markdown:
 {
-  "verdict": "DUNG" | "SAI" | "DUNG_MOT_PHAN" | "GAY_HIEU_LAM" | "CHUA_DU_BANG_CHUNG" | "KHONG_THE_KIEM_CHUNG",
+  "verdict": "DUNG" | "SAI" | "CHUA_DU_BANG_CHUNG",
   "confidence": 0.0-1.0,
-  "normalized_claim": "phát biểu lại tuyên bố trong 1 câu",
-  "summary": "kết luận ngắn 1-2 câu tiếng Việt",
-  "explanation": "lập luận 3-6 câu, nêu lý do và bối cảnh",
-  "evidence": "bằng chứng chính, trích nguồn cụ thể nếu có",
-  "counter_evidence": "bằng chứng/bài viết phản bác nếu có, nếu không thì chuỗi rỗng",
-  "red_flags": ["dấu hiệu đáng ngờ 1", "..."],
-  "limitations": "giới hạn của kết luận này",
-  "sources": [{"title": "...", "url": "https://...", "publisher": "...", "date": "dd/mm/yyyy hoặc chuỗi rỗng", "snippet": "..."}]
+  "summary": "kết luận ngắn 1 câu tiếng Việt",
+  "explanation": "giải thích 2-4 câu tiếng Việt",
+  "sources": [{"title": "...", "url": "https://..."}]
 }
-Tất cả nội dung bằng tiếng Việt. Nếu không có nguồn thật, để "sources": [].
+Tất cả nội dung bằng tiếng Việt.
 """
+
 
         private fun defaultClient(): OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
