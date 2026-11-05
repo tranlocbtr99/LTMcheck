@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 /**
- * Điều phối kiểm chứng: gọi Gemini khi đã có API key, tự động quay về
+ * Điều phối kiểm chứng: gọi DeepSeek khi đã có API key, tự động quay về
  * bộ máy cục bộ (knowledge base + heuristic) khi chưa cấu hình hoặc khi mạng/API lỗi.
  */
 class FactCheckCoordinator private constructor(context: Context) {
 
     private val appContext = context.applicationContext
     private val localEngine = FactCheckEngine()
-    private val client = GeminiFactCheckClient()
+    private val client = DeepSeekFactCheckClient()
     private val settings = AiSettingsStore.getInstance(appContext)
 
     val hasApiKey: Flow<Boolean> = settings.hasApiKeyFlow
@@ -37,7 +37,7 @@ class FactCheckCoordinator private constructor(context: Context) {
                 claim = claim,
                 sourceApp = sourceApp,
                 rawScreenText = rawScreenText,
-                note = "Chưa cấu hình API key Gemini nên kết quả dưới đây chỉ đến từ bộ dữ liệu mẫu có sẵn của ứng dụng."
+                note = "Chưa cấu hình API key DeepSeek nên kết quả dưới đây chỉ đến từ bộ dữ liệu mẫu có sẵn của ứng dụng."
             )
         }
 
@@ -48,7 +48,7 @@ class FactCheckCoordinator private constructor(context: Context) {
                 claim = claim,
                 sourceApp = sourceApp,
                 rawScreenText = rawScreenText,
-                imageBase64 = imageBytes?.let { GeminiFactCheckClient.encodeImage(it) },
+                imageBase64 = imageBytes?.let { DeepSeekFactCheckClient.encodeImage(it) },
                 imageMime = imageMime
             )
         } catch (e: Exception) {
@@ -56,7 +56,7 @@ class FactCheckCoordinator private constructor(context: Context) {
                 claim = claim,
                 sourceApp = sourceApp,
                 rawScreenText = rawScreenText,
-                note = "Không gọi được Gemini (${e.message ?: "lỗi không xác định"}). Kết quả dưới đây là ước lượng cục bộ, cần kiểm chứng lại."
+                note = "Không gọi được DeepSeek (${e.message ?: "lỗi không xác định"}). Kết quả dưới đây là ước lượng cục bộ, cần kiểm chứng lại."
             )
         }
     }
@@ -64,7 +64,7 @@ class FactCheckCoordinator private constructor(context: Context) {
     suspend fun chat(question: String, screenContext: String): Result<String> {
         val apiKey = runCatching { settings.apiKey() }.getOrDefault("")
         if (apiKey.isBlank()) {
-            return Result.failure(GeminiException("Chưa cấu hình API key Gemini trong Cài đặt."))
+            return Result.failure(DeepSeekException("Chưa cấu hình API key DeepSeek trong Cài đặt."))
         }
         val model = runCatching { settings.model() }.getOrDefault(AiSettingsStore.DEFAULT_MODEL)
         return runCatching { client.chat(apiKey, model, question, screenContext) }
