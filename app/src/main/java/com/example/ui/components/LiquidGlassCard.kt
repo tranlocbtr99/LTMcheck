@@ -27,23 +27,22 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.DesignTokens
 import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassBorderHighlight
-import com.example.ui.theme.GlassSurface
+import com.example.ui.theme.LocalGlassColors
 
 @Composable
 fun LiquidGlassCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(DesignTokens.RadiusLarge),
-    borderColor: Color = GlassBorder,
+    borderColor: Color = LocalGlassColors.current.borderSubtle,
     borderWidth: Dp = 1.dp,
-    backgroundColor: Color = GlassSurface,
+    backgroundColor: Color = LocalGlassColors.current.surfacePrimary,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val clickableModifier = if (onClick != null) {
         Modifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
-            indication = ripple(color = GlassBorderHighlight),
+            indication = ripple(color = LocalGlassColors.current.glassHighlight),
             onClick = onClick
         )
     } else {

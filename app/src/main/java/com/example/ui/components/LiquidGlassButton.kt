@@ -14,8 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.DesignTokens
+import com.example.ui.theme.LocalGlassColors
 import com.example.ui.theme.GlassBorderHighlight
 import com.example.ui.theme.GlassSurfaceElevated
 import com.example.ui.theme.TextPrimary
@@ -28,9 +28,10 @@ fun LiquidGlassButton(
     isPrimary: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
-    val containerColor = if (isPrimary) CyanNeon else GlassSurfaceElevated
-    val contentColor = if (isPrimary) Color(0xFF090D1A) else TextPrimary
-    val borderColor = if (isPrimary) CyanNeon else GlassBorderHighlight
+    val colors = LocalGlassColors.current
+    val containerColor = if (isPrimary) colors.accentPrimary else colors.surfaceElevated
+    val contentColor = if (isPrimary) Color(0xFF000000) else colors.textPrimary
+    val borderColor = if (isPrimary) colors.accentPrimary else colors.glassHighlight
 
     Button(
         onClick = onClick,
@@ -40,8 +41,8 @@ fun LiquidGlassButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = GlassSurfaceElevated.copy(alpha = 0.5f),
-            disabledContentColor = TextPrimary.copy(alpha = 0.4f)
+            disabledContainerColor = colors.surfaceElevated.copy(alpha = 0.5f),
+            disabledContentColor = colors.textPrimary.copy(alpha = 0.4f)
         ),
         border = BorderStroke(1.dp, borderColor.copy(alpha = 0.8f)),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),

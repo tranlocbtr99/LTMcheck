@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -13,32 +14,41 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = CyanNeon,
-    onPrimary = Color(0xFF090D1A),
+    primary = DarkGlassColors.accentPrimary,
+    onPrimary = Color(0xFF000000),
     primaryContainer = Color(0xFF0C4A6E),
     onPrimaryContainer = Color(0xFFBAE6FD),
-    secondary = PurpleNeon,
+    secondary = DarkGlassColors.accentTertiary,
     onSecondary = Color.White,
     secondaryContainer = Color(0xFF581C87),
     onSecondaryContainer = Color(0xFFF3E8FF),
-    background = GlassBackground,
-    onBackground = TextPrimary,
-    surface = Color(0xFF0F172A),
-    onSurface = TextPrimary,
+    background = DarkGlassColors.backgroundPrimary,
+    onBackground = DarkGlassColors.textPrimary,
+    surface = DarkGlassColors.backgroundSecondary,
+    onSurface = DarkGlassColors.textPrimary,
     surfaceVariant = Color(0xFF1E293B),
-    onSurfaceVariant = TextSecondary,
-    outline = GlassBorder,
-    outlineVariant = Color(0x1A38BDF8)
+    onSurfaceVariant = DarkGlassColors.textSecondary,
+    outline = DarkGlassColors.borderSubtle,
+    outlineVariant = DarkGlassColors.glassHighlight
 )
 
-private val LightColorScheme = darkColorScheme(
-    // Liquid glass theme looks optimal in deep dark cyber glass mode
-    primary = CyanNeon,
-    onPrimary = Color(0xFF090D1A),
-    background = GlassBackground,
-    onBackground = TextPrimary,
-    surface = Color(0xFF0F172A),
-    onSurface = TextPrimary
+private val LightColorScheme = lightColorScheme(
+    primary = LightGlassColors.accentPrimary,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFD6E4FF),
+    onPrimaryContainer = Color(0xFF001A33),
+    secondary = LightGlassColors.accentTertiary,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFEADDFF),
+    onSecondaryContainer = Color(0xFF21005D),
+    background = LightGlassColors.backgroundPrimary,
+    onBackground = LightGlassColors.textPrimary,
+    surface = LightGlassColors.backgroundSecondary,
+    onSurface = LightGlassColors.textPrimary,
+    surfaceVariant = Color(0xFFE5E5EA),
+    onSurfaceVariant = LightGlassColors.textSecondary,
+    outline = LightGlassColors.borderSubtle,
+    outlineVariant = LightGlassColors.glassHighlight
 )
 
 @Composable
@@ -47,20 +57,24 @@ fun MyApplicationTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val glassColors = if (darkTheme) DarkGlassColors else LightGlassColors
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = Color(0xFF090D1A).toArgb()
-            window.navigationBarColor = Color(0xFF090D1A).toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            val bg = if (darkTheme) DarkGlassColors.backgroundPrimary else LightGlassColors.backgroundPrimary
+            window.statusBarColor = bg.toArgb()
+            window.navigationBarColor = bg.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalGlassColors provides glassColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

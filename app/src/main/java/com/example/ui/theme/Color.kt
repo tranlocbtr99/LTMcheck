@@ -1,51 +1,92 @@
 package com.example.ui.theme
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// iOS-style Liquid Glass Core Palette (dark mode)
-val GlassBackground = Color(0xFF000000)
-val GlassSurface = Color(0x1FFFFFFF)
-val GlassSurfaceElevated = Color(0x29FFFFFF)
-val GlassBorder = Color(0x33FFFFFF)
-val GlassBorderHighlight = Color(0x66FFFFFF)
+data class GlassColors(
+    val backgroundPrimary: Color,
+    val backgroundSecondary: Color,
+    val surfacePrimary: Color,
+    val surfaceElevated: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val accentPrimary: Color,
+    val accentSecondary: Color,
+    val accentTertiary: Color,
+    val borderSubtle: Color,
+    val glassTint: Color,
+    val glassHighlight: Color,
+    val success: Color,
+    val warning: Color,
+    val error: Color
+)
 
-// iOS System Accents
-val CyanNeon = Color(0xFF0A84FF)
-val BlueNeon = Color(0xFF5AC8FA)
-val PurpleNeon = Color(0xFFBF5AF2)
+val DarkGlassColors = GlassColors(
+    backgroundPrimary = Color(0xFF000000),
+    backgroundSecondary = Color(0xFF1C1C1E),
+    surfacePrimary = Color(0x1FFFFFFF),
+    surfaceElevated = Color(0x29FFFFFF),
+    textPrimary = Color(0xFFFFFFFF),
+    textSecondary = Color(0x99EBEBF5),
+    textMuted = Color(0x66EBEBF5),
+    accentPrimary = Color(0xFF0A84FF),
+    accentSecondary = Color(0xFF5AC8FA),
+    accentTertiary = Color(0xFFBF5AF2),
+    borderSubtle = Color(0x33FFFFFF),
+    glassTint = Color(0x1A0A84FF),
+    glassHighlight = Color(0x66FFFFFF),
+    success = Color(0xFF30D158),
+    warning = Color(0xFFFF9F0A),
+    error = Color(0xFFFF453A)
+)
 
-// Text Colors (iOS labels)
-val TextPrimary = Color(0xFFFFFFFF)
-val TextSecondary = Color(0x99EBEBF5)
-val TextMuted = Color(0x66EBEBF5)
+val LightGlassColors = GlassColors(
+    backgroundPrimary = Color(0xFFF2F2F7),
+    backgroundSecondary = Color(0xFFFFFFFF),
+    surfacePrimary = Color(0x1A000000),
+    surfaceElevated = Color(0x26000000),
+    textPrimary = Color(0xFF000000),
+    textSecondary = Color(0x993C3C43),
+    textMuted = Color(0x663C3C43),
+    accentPrimary = Color(0xFF007AFF),
+    accentSecondary = Color(0xFF5AC8FA),
+    accentTertiary = Color(0xFFAF52DE),
+    borderSubtle = Color(0x33000000),
+    glassTint = Color(0x1A007AFF),
+    glassHighlight = Color(0x66FFFFFF),
+    success = Color(0xFF34C759),
+    warning = Color(0xFFFF9500),
+    error = Color(0xFFFF3B30)
+)
 
-// Verdict Accents (iOS system colors)
-val VerdictTrueColor = Color(0xFF30D158)
-val VerdictFalseColor = Color(0xFFFF453A)
-val VerdictPartialColor = Color(0xFFFF9F0A)
-val VerdictMisleadingColor = Color(0xFFFF9F0A)
-val VerdictInsufficientColor = Color(0xFFBF5AF2)
-val VerdictUnverifiableColor = Color(0x99EBEBF5)
+val LocalGlassColors = staticCompositionLocalOf { DarkGlassColors }
 
-// Liquid Glass Gradients
+val GlassBackground = DarkGlassColors.backgroundPrimary
+val GlassSurface = DarkGlassColors.surfacePrimary
+val GlassSurfaceElevated = DarkGlassColors.surfaceElevated
+val GlassBorder = DarkGlassColors.borderSubtle
+val GlassBorderHighlight = DarkGlassColors.glassHighlight
+val CyanNeon = DarkGlassColors.accentPrimary
+val BlueNeon = DarkGlassColors.accentSecondary
+val PurpleNeon = DarkGlassColors.accentTertiary
+val TextPrimary = DarkGlassColors.textPrimary
+val TextSecondary = DarkGlassColors.textSecondary
+val TextMuted = DarkGlassColors.textMuted
+val VerdictTrueColor = DarkGlassColors.success
+val VerdictFalseColor = DarkGlassColors.error
+val VerdictPartialColor = DarkGlassColors.warning
+val VerdictMisleadingColor = DarkGlassColors.warning
+val VerdictInsufficientColor = DarkGlassColors.accentTertiary
+val VerdictUnverifiableColor = DarkGlassColors.textMuted
+
 val LiquidGlassGradient = Brush.verticalGradient(
-    colors = listOf(
-        Color(0x26FFFFFF),
-        Color(0x0DFFFFFF)
-    )
+    colors = listOf(DarkGlassColors.surfacePrimary, DarkGlassColors.backgroundPrimary.copy(alpha = 0.5f))
 )
-
 val LiquidGlowGradient = Brush.radialGradient(
-    colors = listOf(
-        Color(0x330A84FF),
-        Color(0x00000000)
-    )
+    colors = listOf(DarkGlassColors.glassTint, Color(0x00000000))
 )
-
 val HeroHeaderGradient = Brush.horizontalGradient(
-    colors = listOf(
-        Color(0xFF0A84FF),
-        Color(0xFF5AC8FA)
-    )
+    colors = listOf(DarkGlassColors.accentPrimary, DarkGlassColors.accentSecondary)
 )
