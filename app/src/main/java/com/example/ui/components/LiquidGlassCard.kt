@@ -56,8 +56,8 @@ fun LiquidGlassCard(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        backgroundColor.copy(alpha = 0.45f),
-                        backgroundColor.copy(alpha = 0.18f)
+                        backgroundColor.copy(alpha = 0.50f),
+                        backgroundColor.copy(alpha = 0.20f)
                     )
                 )
             )
@@ -66,8 +66,8 @@ fun LiquidGlassCard(
                     0.5.dp,
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0x66FFFFFF),
-                            Color(0x1AFFFFFF)
+                            Color(0x99FFFFFF),
+                            Color(0x22FFFFFF)
                         )
                     )
                 ),
