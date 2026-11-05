@@ -1292,8 +1292,9 @@ class FloatingAssistantService : Service() {
                 FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.FINISHED)
                 updateBubbleUi()
 
+                // Luôn hiển thị kết quả trả về từ Gemini, không chỉ khi phát hiện sai lệch.
+                showOnScreenResultCard(record)
                 if (record.isAlerted) {
-                    showOnScreenResultCard(record)
                     triggerAlertNotification(record)
                 }
             }
