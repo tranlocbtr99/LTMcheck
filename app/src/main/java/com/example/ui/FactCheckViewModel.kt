@@ -164,7 +164,7 @@ class FactCheckViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /** Gọi thử DeepSeek để xác nhận key/model hợp lệ. */
+    /** Gọi thử Gemini để xác nhận key/model hợp lệ. */
     fun testAiConnection(apiKey: String, model: String) {
         if (_aiTestInProgress.value) return
         viewModelScope.launch {
@@ -173,7 +173,7 @@ class FactCheckViewModel(application: Application) : AndroidViewModel(applicatio
             val result = coordinator.testConnection(apiKey, model)
             _aiTestInProgress.value = false
             _aiStatusMessage.value = result.fold(
-                onSuccess = { count -> "Kết nối thành công. Key hợp lệ, truy cập được $count model DeepSeek." },
+                onSuccess = { count -> "Kết nối thành công. Key hợp lệ, truy cập được $count model Gemini." },
                 onFailure = { e -> "Kết nối thất bại: ${e.message}" }
             )
         }

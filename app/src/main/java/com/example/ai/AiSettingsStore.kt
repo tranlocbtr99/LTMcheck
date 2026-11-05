@@ -52,17 +52,19 @@ class AiSettingsStore private constructor(context: Context) {
     }
 
     companion object {
-        /** Model mặc định: nhanh, rẻ, hỗ trợ cả ảnh (vision) và JSON mode. */
-        const val DEFAULT_MODEL = "deepseek-flash"
+        /** Model mặc định: Gemini 3.6 Flash (miễn phí, nhanh, có vision). */
+        const val DEFAULT_MODEL = "gemini-3.6-flash"
 
-        /** Các model DeepSeek hiện có. `deepseek-flash` là model duy nhất đọc được ảnh. */
+        /** Các model Gemini còn hỗ trợ generateContent (3.x series). */
         val SUGGESTED_MODELS = listOf(
-            "deepseek-flash",
-            "deepseek-v4-pro"
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-3.8-flash",
+            "gemini-3.1-flash-lite"
         )
 
-        private val KEY_API_KEY = stringPreferencesKey("deepseek_api_key")
-        private val KEY_MODEL = stringPreferencesKey("deepseek_model")
+        private val KEY_API_KEY = stringPreferencesKey("gemini_api_key")
+        private val KEY_MODEL = stringPreferencesKey("gemini_model")
 
         @Volatile
         private var instance: AiSettingsStore? = null

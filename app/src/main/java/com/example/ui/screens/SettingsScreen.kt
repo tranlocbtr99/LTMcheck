@@ -106,7 +106,7 @@ fun SettingsScreen(
             contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 0. Cấu hình AI DeepSeek (API key do người dùng nhập, không nhúng vào APK)
+            // 0. Cấu hình AI Gemini (API key do người dùng nhập, không nhúng vào APK)
             item {
                 val keyConfigured by viewModel.aiKeyConfigured.collectAsStateWithLifecycle()
                 val savedModel by viewModel.aiModel.collectAsStateWithLifecycle()
@@ -121,14 +121,14 @@ fun SettingsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Key, contentDescription = null, tint = CyanNeon, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("CẤU HÌNH AI DEEPSEEK", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("CẤU HÌNH AI GEMINI", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
 
                         Text(
                             text = if (keyConfigured) {
                                 "Đã có API key trên thiết bị. Key chỉ lưu trong bộ nhớ riêng của ứng dụng, không nằm trong APK."
                             } else {
-                                "Chưa có API key. Ứng dụng đang dùng dữ liệu mẫu cục bộ. Nhập key từ platform.deepseek.com/api_keys để bật kiểm chứng bằng AI thật."
+                                "Chưa có API key. Ứng dụng đang dùng dữ liệu mẫu cục bộ. Nhập key từ Google AI Studio để bật kiểm chứng bằng AI thật."
                             },
                             color = if (keyConfigured) VerdictTrueColor else TextMuted,
                             fontSize = 12.sp,
@@ -138,7 +138,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = keyInput,
                             onValueChange = { keyInput = it },
-                            placeholder = { Text("Dán API key (sk-…)", color = TextMuted, fontSize = 13.sp) },
+                            placeholder = { Text("Dán API key (AIza…)", color = TextMuted, fontSize = 13.sp) },
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
                             modifier = Modifier.fillMaxWidth(),
@@ -197,7 +197,7 @@ fun SettingsScreen(
                         }
 
                         Text(
-                            text = "Gợi ý model: deepseek-flash (nhanh, rẻ, đọc được ảnh chụp màn hình) hoặc deepseek-v4-pro (phân tích sâu hơn, không đọc ảnh). Tài khoản DeepSeek phải có số dư, nếu hết sẽ báo lỗi 402.",
+                            text = "Gợi ý model: gemini-3.6-flash (mặc định, miễn phí, nhanh, có vision) hoặc gemini-3.8-flash (phân tích sâu hơn). Dòng 2.5 đã bị Google ngừng hỗ trợ.",
                             color = TextMuted,
                             fontSize = 11.sp,
                             lineHeight = 15.sp

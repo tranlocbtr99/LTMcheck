@@ -6,7 +6,7 @@ Trợ lý kiểm chứng thông tin (fact-check) chạy trên Android: nhập v�
 
 ## Tính năng
 
-- **Kiểm chứng bằng DeepSeek**: gọi Search API (`/v1/tools/search`) lấy nguồn web thật, nhồi vào prompt rồi gọi `/chat/completions` với JSON mode — trả về kết luận, độ tin cậy, bằng chứng, dấu hiệu đáng ngờ và nguồn có thể bấm mở.
+- **Kiểm chứng bằng Gemini**: gọi `generateContent` với Google Search grounding để lấy nguồn thật, trả về JSON có cấu trúc (kết luận, độ tin cậy, bằng chứng, dấu hiệu đáng ngờ, nguồn).
 - **3 trụ cột kết luận**: ĐÚNG / SAI / CHƯA ĐỦ DỮ LIỆU (kèm các mức Đúng một phần, Gây hiểu lầm, Ý kiến cá nhân).
 - **Trợ lý nổi**: nút nổi trên ứng dụng khác, chụp màn hình bằng MediaProjection, OCR bằng ML Kit, cảnh báo khi phát hiện nội dung sai lệch.
 - **Nhận diện lời nói**: SpeechRecognizer tiếng Việt để kiểm chứng nội dung video đang phát.
@@ -17,16 +17,16 @@ Trợ lý kiểm chứng thông tin (fact-check) chạy trên Android: nhập v�
 ## Yêu cầu
 
 - Android 7.0 (API 24) trở lên.
-- Một **DeepSeek API key** tạo tại [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys). DeepSeek **không có free tier**: tài khoản phải có số dư, nếu hết sẽ trả lỗi `402 Insufficient Balance`.
+- Một **Gemini API key** lấy miễn phí tại [Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Cài đặt & cấu hình
 
 1. Tải APK ở mục **Releases** và cài đặt (cho phép "Cài từ nguồn không xác định").
-2. Mở app → tab **Cài đặt** → mục **CẤU HÌNH AI DEEPSEEK**.
-3. Dán API key (dạng `sk-…`), giữ model `deepseek-flash` (mặc định, nhanh, rẻ, **đọc được ảnh chụp màn hình**) hoặc đổi sang `deepseek-v4-pro` (phân tích sâu hơn, không có vision), nhấn **Lưu cấu hình**.
-4. Nhấn **Kiểm tra kết nối** để xác nhận key hợp lệ (endpoint `/models`, không tốn token).
+2. Mở app → tab **Cài đặt** → mục **CẤU HÌNH AI GEMINI**.
+3. Dán API key, giữ model `gemini-3.6-flash` (mặc định, nhanh và rẻ) hoặc đổi sang `gemini-3.8-flash` (phân tích sâu hơn), nhấn **Lưu cấu hình**.
+4. Nhấn **Kiểm tra kết nối** để xác nhận key hợp lệ.
 
-API key chỉ được lưu trong bộ nhớ riêng của ứng dụng trên thiết bị (`DataStore`), **không nhúng vào APK**, không gửi đi đâu ngoài `api.deepseek.com`.
+API key chỉ được lưu trong bộ nhớ riêng của ứng dụng trên thiết bị (`DataStore`), **không nhúng vào APK**, không gửi đi đâu ngoài Google Gemini API.
 
 ## Build từ mã nguồn
 
@@ -61,10 +61,10 @@ keytool -genkeypair -v -keystore upload-key.jks -alias upload \
 
 ```
 app/src/main/java/com/example/
-├── ai/                  # Tích hợp DeepSeek
-│   ├── AiSettingsStore.kt          # DataStore: API key + model (không nằm trong APK)
-│   ├── DeepSeekFactCheckClient.kt  # OkHttp → Search API + chat/completions, parse JSON
-│   └── FactCheckCoordinator.kt     # Điều phối AI + fallback cục bộ
+├── ai/                  # Tích hợp Gemini
+│   ├── AiSettingsStore.kt        # DataStore: API key + model (không nằm trong APK)
+│   ├── GeminiFactCheckClient.kt  # OkHttp → generateContent, parse JSON, grounding
+│   └── FactCheckCoordinator.kt   # Điều phối AI + fallback cục bộ
 ├── engine/              # OCR, trích xuất claim, phát hiện khung hình, giọng nói
 ├── service/             # FloatingAssistantService (overlay + MediaProjection)
 ├── ui/                  # Compose: Dashboard, Chat, History, Detail, Settings
@@ -76,9 +76,7 @@ Luồng kiểm chứng:
 
 ```
 Người dùng / Màn hình (OCR) ─→ ClaimExtractor ─→ FactCheckCoordinator
-                                                      ├─ có API key → DeepSeek
-                                                      │    1. POST /v1/tools/search  (lấy nguồn thật)
-                                                      │    2. POST /chat/completions (json_object)
+                                                      ├─ có API key → Gemini (grounding)
                                                       └─ lỗi/không key → Knowledge base cục bộ
                                                  ─→ FactCheckRecord ─→ Room + UI
 ```
@@ -93,10 +91,7 @@ Người dùng / Màn hình (OCR) ─→ ClaimExtractor ─→ FactCheckCoordina
 ## Giới hạn đã biết
 
 - AI có thể sai hoặc bỏ sót ngữ cảnh; luôn đối chiếu nguồn gốc.
-- **Tài khoản DeepSeek phải có số dư.** Hết tiền → `402 Insufficient Balance` cho cả search lẫn chat; app hiện thông báo rõ và rơi về knowledge base cục bộ.
-- **Nguồn chỉ lấy từ Search API.** URL do model tự nghĩ ra bị loại bỏ, nên danh sách nguồn luôn là link thật. Nếu search lỗi hoặc không có kết quả, app ghi rõ trong mục "giới hạn".
-- **`deepseek-v4-pro` không đọc được ảnh.** Khi kiểm chứng bằng ảnh chụp màn hình, dùng `deepseek-flash`.
-- Chi phí: khoảng $0.15/1M token input, $0.60/1M token output (giờ thấp điểm) và $0.75 cho 1.000 lượt search. Một lần kiểm chứng dùng 1 lượt search + vài nghìn token.
+- Một số model không cho phép bật Google Search grounding cùng lúc với JSON mode — client tự thử lại không kèm tools.
 - Ảnh chụp màn hình được gửi dạng JPEG nén (chất lượng 70) để giảm băng thông.
 - Giám sát nền tiêu tốn pin; nên dùng tần suất quét "Tiết kiệm" khi không cần phản hồi tức thì.
 
