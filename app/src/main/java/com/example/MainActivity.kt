@@ -31,6 +31,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import com.example.ui.theme.LocalGlassColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
@@ -250,10 +254,12 @@ fun MainAppContent(
         Scaffold(
             bottomBar = {
                 NavigationBar(
-                    containerColor = Color(0xF2090D1A),
+                    containerColor = LocalGlassColors.current.surfaceElevated.copy(alpha = 0.97f),
                     modifier = Modifier
                         .navigationBarsPadding()
-                        .border(1.dp, GlassBorder)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(32.dp))
+                        .border(0.5.dp, GlassBorder, RoundedCornerShape(32.dp))
                 ) {
                     AppNavScreen.entries.forEach { screen ->
                         val selected = currentScreen == screen
@@ -287,7 +293,7 @@ fun MainAppContent(
                 }
             },
             containerColor = GlassBackground,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().imePadding()
         ) { innerPadding ->
             Box(
                 modifier = Modifier

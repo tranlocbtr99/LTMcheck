@@ -34,7 +34,7 @@ fun LiquidGlassCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(DesignTokens.RadiusLarge),
     borderColor: Color = LocalGlassColors.current.borderSubtle,
-    borderWidth: Dp = 1.dp,
+    borderWidth: Dp = 0.5.dp,
     backgroundColor: Color = LocalGlassColors.current.surfacePrimary,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
@@ -49,30 +49,12 @@ fun LiquidGlassCard(
         Modifier
     }
 
+    // Compatibility name retained for callers; content surfaces are deliberately opaque.
     Box(
         modifier = modifier
-            .shadow(8.dp, shape, ambientColor = Color(0x33000000), spotColor = Color(0x33000000))
             .clip(shape)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        backgroundColor.copy(alpha = 0.50f),
-                        backgroundColor.copy(alpha = 0.20f)
-                    )
-                )
-            )
-            .border(
-                BorderStroke(
-                    0.5.dp,
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0x99FFFFFF),
-                            Color(0x22FFFFFF)
-                        )
-                    )
-                ),
-                shape = shape
-            )
+            .background(backgroundColor)
+            .border(BorderStroke(borderWidth, borderColor), shape)
             .then(clickableModifier)
             .padding(DesignTokens.SpaceStandard),
         content = content
