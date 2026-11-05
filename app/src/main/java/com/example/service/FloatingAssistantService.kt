@@ -1231,6 +1231,7 @@ class FloatingAssistantService : Service() {
             if (ocrText.isBlank()) {
                 withContext(Dispatchers.Main) {
                     FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.IDLE)
+                    Toast.makeText(this@FloatingAssistantService, "Không đọc được văn bản trên màn hình.", Toast.LENGTH_SHORT).show()
                 }
                 return
             }
@@ -1294,6 +1295,11 @@ class FloatingAssistantService : Service() {
 
                 // Luôn hiển thị kết quả trả về từ Gemini, không chỉ khi phát hiện sai lệch.
                 showOnScreenResultCard(record)
+                Toast.makeText(
+                    this@FloatingAssistantService,
+                    "${record.verdict.titleVi}: ${record.shortExplanation}",
+                    Toast.LENGTH_LONG
+                ).show()
                 if (record.isAlerted) {
                     triggerAlertNotification(record)
                 }
@@ -1436,6 +1442,11 @@ class FloatingAssistantService : Service() {
                     FactCheckServiceManager.updateAnalysisPhase(AnalysisPhase.FINISHED)
                     updateBubbleUi()
                     showOnScreenResultCard(record)
+                    Toast.makeText(
+                        this@FloatingAssistantService,
+                        "${record.verdict.titleVi}: ${record.shortExplanation}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             } else {
                 // CHƯA ĐỦ CƠ SỞ: Không phát hiện văn bản rõ ràng hoặc âm thanh
