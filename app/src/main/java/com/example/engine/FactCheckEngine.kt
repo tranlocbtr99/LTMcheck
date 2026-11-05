@@ -398,15 +398,7 @@ class FactCheckEngine {
             detailedExplanation = "Lập luận phân tích: Theo nguyên tắc kiểm chứng thông tin IFCN và tiêu chuẩn bảo đảm tính trung thực của LTM FactCheck AI, khi thông tin chưa được công bố qua các cơ quan quản lý chuyên ngành hoặc nghiên cứu bình duyệt (peer-reviewed), hệ thống phân loại là 'Chưa đủ dữ liệu' thay vì vội vàng quy kết để tránh định kiến sai lệch. Người dùng nên theo dõi thêm thông cáo từ cơ quan chức năng có thẩm quyền.",
             evidence = "Chưa tìm thấy nguồn kiểm chứng độc lập nào công bố báo cáo xác thực về nội dung cụ thể này.",
             counterEvidence = "Chưa ghi nhận văn bản phản bác hoặc cải chính chính thức từ các cơ quan hữu quan.",
-            references = listOf(
-                ReferenceSource(
-                    title = "Google Fact Check Tools & IFCN Explorer Database",
-                    url = "https://toolbox.google.com/factcheck/explorer",
-                    publisher = "Google Fact Check Tools / IFCN",
-                    publishDate = dateFormat.format(Date()),
-                    supportingSnippet = "Khi thông tin chưa có tiền lệ xác minh, cần thận trọng và tra cứu thêm tại cơ quan chức năng chuyên ngành."
-                )
-            ),
+            references = emptyList(),
             limitations = "Cần bổ sung bằng chứng và dữ liệu thực chứng từ cơ quan có thẩm quyền.",
             confidence = 0.75f,
             sourceApp = sourceApp,
