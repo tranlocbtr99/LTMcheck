@@ -1,20 +1,20 @@
 package com.example.ai
 
 import android.content.Context
-import com.example.engine.FactCheckEngine
 import com.example.model.FactCheckRecord
+import com.example.model.FactCheckVerdict
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 /**
- * Điều phối kiểm chứng: gọi Gemini khi đã có API key, tự động quay về
- * bộ máy cục bộ (knowledge base + heuristic) khi chưa cấu hình hoặc khi mạng/API lỗi.
+ * Điều phối kiểm chứng: chỉ dùng Gemini. Không dùng knowledge base cục bộ.
+ * Nếu thiếu key hoặc lỗi mạng/API, trả về bản ghi nêu rõ nguyên nhân để người dùng xử lý.
  */
 class FactCheckCoordinator private constructor(context: Context) {
 
     private val appContext = context.applicationContext
-    private val localEngine = FactCheckEngine()
     private val client = GeminiFactCheckClient()
     private val settings = AiSettingsStore.getInstance(appContext)
 
@@ -33,15 +33,15 @@ class FactCheckCoordinator private constructor(context: Context) {
         val model = runCatching { settings.model() }.getOrDefault(AiSettingsStore.DEFAULT_MODEL)
 
         if (apiKey.isBlank()) {
-            return@withContext localFallback(
+            return@withContext errorRecord(
                 claim = claim,
                 sourceApp = sourceApp,
                 rawScreenText = rawScreenText,
-                note = "Chưa cấu hình API key Gemini nên kết quả dưới đây chỉ đến từ bộ dữ liệu mẫu có sẵn của ứng dụng."
+                message = "Chưa cấu hình API key Gemini. Vào tab Cài đặt → CẤU HÌNH AI GEMINI để nhập key (AIza…)."
             )
         }
 
-        try {
+        return@withContext try {
             client.analyze(
                 apiKey = apiKey,
                 model = model,
@@ -52,11 +52,11 @@ class FactCheckCoordinator private constructor(context: Context) {
                 imageMime = imageMime
             )
         } catch (e: Exception) {
-            localFallback(
+            errorRecord(
                 claim = claim,
                 sourceApp = sourceApp,
                 rawScreenText = rawScreenText,
-                note = "Không gọi được Gemini (${e.message ?: "lỗi không xác định"}). Kết quả dưới đây là ước lượng cục bộ, cần kiểm chứng lại."
+                message = "Không gọi được Gemini: ${e.message ?: "lỗi không xác định"}. Kiểm tra mạng và API key trong Cài đặt."
             )
         }
     }
@@ -81,18 +81,28 @@ class FactCheckCoordinator private constructor(context: Context) {
 
     suspend fun clearApiKey() = settings.saveApiKey("")
 
-    private fun localFallback(
+    private fun errorRecord(
         claim: String,
         sourceApp: String,
         rawScreenText: String,
-        note: String
-    ): FactCheckRecord {
-        val local = localEngine.verifyClaim(claim, sourceApp, rawScreenText)
-        return local.copy(
-            limitations = "${local.limitations}\n\n$note",
-            sourceApp = sourceApp
-        )
-    }
+        message: String
+    ): FactCheckRecord = FactCheckRecord(
+        id = UUID.randomUUID().toString(),
+        originalClaim = claim,
+        normalizedClaim = claim,
+        verdict = FactCheckVerdict.CHUA_DU_BANG_CHUNG,
+        shortExplanation = message,
+        detailedExplanation = message,
+        evidence = "",
+        counterEvidence = "",
+        references = emptyList(),
+        checkedAt = System.currentTimeMillis(),
+        limitations = message,
+        confidence = 0f,
+        sourceApp = sourceApp,
+        rawScreenText = rawScreenText,
+        isAlerted = false
+    )
 
     companion object {
         @Volatile
