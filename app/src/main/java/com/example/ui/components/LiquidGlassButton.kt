@@ -4,7 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,14 +30,14 @@ fun LiquidGlassButton(
 ) {
     val colors = LocalGlassColors.current
     val containerColor = if (isPrimary) colors.accentPrimary else colors.surfaceElevated
-    val contentColor = if (isPrimary) Color(0xFF000000) else colors.textPrimary
+    val contentColor = if (isPrimary) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else colors.textPrimary
     val borderColor = if (isPrimary) colors.accentPrimary else colors.glassHighlight
 
     Button(
         onClick = onClick,
-        modifier = modifier.height(50.dp),
+        modifier = modifier.heightIn(min = DesignTokens.MinTouchTarget),
         enabled = enabled,
-        shape = RoundedCornerShape(DesignTokens.RadiusMedium),
+        shape = RoundedCornerShape(50),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
